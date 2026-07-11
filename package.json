@@ -1,0 +1,66 @@
+{
+  "name": "creatorpesa-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "analyze": "ANALYZE=true next build",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{md,json,css}": [
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "next": "14.2.35",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "@stellar/stellar-sdk": "12.1.0",
+    "@stellar/freighter-api": "2.0.0",
+    "zod": "3.23.8",
+    "clsx": "2.1.1",
+    "tailwind-merge": "2.3.0",
+    "recharts": "2.12.7",
+    "qrcode.react": "3.1.0",
+    "date-fns": "3.6.0"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "22.20.1",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "tailwindcss": "3.4.4",
+    "postcss": "8.4.38",
+    "autoprefixer": "10.4.19",
+    "eslint": "8.57.0",
+    "eslint-config-next": "14.2.35",
+    "eslint-config-prettier": "9.1.0",
+    "prettier": "3.3.2",
+    "prettier-plugin-tailwindcss": "0.6.5",
+    "vitest": "4.1.10",
+    "vite": "7.1.12",
+    "@vitejs/plugin-react": "5.0.0",
+    "jsdom": "24.1.0",
+    "@testing-library/react": "16.0.0",
+    "@testing-library/jest-dom": "6.4.6",
+    "husky": "9.1.7",
+    "lint-staged": "17.0.8",
+    "@next/bundle-analyzer": "14.2.35"
+  }
+}
