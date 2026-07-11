@@ -57,8 +57,10 @@ graph TB
         ANCHOR[Stellar Anchor — fiat/USDC]
     end
 
-    subgraph Contract["Settlement Contract (Soroban / Rust)"]
+    subgraph Contract["Settlement Contracts (Soroban / Rust)"]
         ROUTER[tip_router.rs — Record tip, split fee, emit event]
+        ESCROW[escrow.rs — Hold sponsorship funds, release after attestation + dispute window]
+        SPLIT[splitter.rs — Distribute tips / subscriptions / escrow releases across collaborators]
         PAYOUT[payout.rs — Creator balance + withdrawal]
     end
 
@@ -71,6 +73,8 @@ graph TB
         USDC[USDC Token Contract]
     end
 
+    B[Brand / Sponsor]
+
     V -->|pick amount + message| TIP
     TIP -->|pay in local currency| MPESA
     TIP --> AIRTEL
@@ -79,11 +83,17 @@ graph TB
     AIRTEL --> ANCHOR
     MOMO --> ANCHOR
     ANCHOR -->|settle USDC| ROUTER
-    ROUTER -->|split: creator / platform| USDC
+    V -->|subscribe to membership tier| SPLIT
+    ROUTER --> SPLIT
+    SPLIT -->|split: creator / collaborators / platform| USDC
     USDC --> LEDGER
     ROUTER -->|tip_received event| WS
     WS -->|push alert| OBS
     WS -->|push stats| DASH
+
+    B -->|fund deal| ESCROW
+    ESCROW -->|attest delivery + dispute window| SPLIT
+    C -->|propose deal terms| DASH
 
     C -->|withdraw| PAYOUT
     PAYOUT --> LEDGER
@@ -93,20 +103,22 @@ graph TB
 
 ### Core Components
 
-- **tip_router.rs**: Records each tip on-chain, splits the platform fee from the creator's share, and emits a `tip_received` event
+- **tip_router.rs**: Records each tip on-chain, forwards it to the splitter, and emits a `tip_received` event
+- **escrow.rs**: Holds a brand's sponsorship funds in USDC; releases to the creator only once the deliverable is attested and a dispute window passes (or refunds/splits per dispute resolution) — see [Sponsorship Deal Lifecycle](#sponsorship-deal-lifecycle--state-machine)
+- **splitter.rs**: Distributes incoming payments — tips, membership subscriptions, or escrow releases — across a creator's configured collaborator splits in a single atomic transaction
 - **payout.rs**: Tracks each creator's accumulated balance and handles withdrawal to their linked payout method
 - **WebSocket/SSE gateway**: Subscribes to on-chain events and fans them out to the connected OBS overlay and dashboard sessions for a given creator
 - **Anchor integration**: Converts local mobile-money payments to USDC and back, so viewers and creators never have to manage a wallet manually
 
 ## Tech Stack
 
-| Component      | Technology                                   | Purpose                                                             |
-| -------------- | -------------------------------------------- | ------------------------------------------------------------------- |
-| Frontend       | Next.js + TypeScript + TailwindCSS           | Creator dashboard, public tip page, OBS overlay                     |
-| Realtime       | WebSockets / Server-Sent Events              | Push tip alerts to the OBS browser source and dashboard instantly   |
-| Settlement     | Rust + Soroban (Stellar)                     | Tip recording, platform fee split, creator payout accounting        |
-| Local Payments | M-Pesa / Airtel Money / MTN MoMo via anchors | Fiat on-ramp so viewers can tip without holding crypto              |
-| Wallet / Auth  | Freighter Wallet / Stellar Passkeys          | Blockchain auth; silent custodial wallet generation on social login |
+| Component      | Technology                                   | Purpose                                                                         |
+| -------------- | -------------------------------------------- | ------------------------------------------------------------------------------- |
+| Frontend       | Next.js + TypeScript + TailwindCSS           | Creator dashboard, public tip page, OBS overlay                                 |
+| Realtime       | WebSockets / Server-Sent Events              | Push tip alerts to the OBS browser source and dashboard instantly               |
+| Settlement     | Rust + Soroban (Stellar)                     | Tip recording, sponsorship escrow, payment splitting, creator payout accounting |
+| Local Payments | M-Pesa / Airtel Money / MTN MoMo via anchors | Fiat on-ramp so viewers can tip without holding crypto                          |
+| Wallet / Auth  | Freighter Wallet / Stellar Passkeys          | Blockchain auth; silent custodial wallet generation on social login             |
 
 ## Tip Flow — Sequence Diagram
 
@@ -157,13 +169,51 @@ sequenceDiagram
 └───────────┘
 ```
 
+Tipping is one of three income streams — the other two, sponsorship deals and membership subscriptions, have their own lifecycles below.
+
+## Sponsorship Deal Lifecycle — State Machine
+
+```
+┌──────────┐
+│ Proposed │  ← creator records deal terms (brand, amount, deliverable) in the dashboard
+└────┬─────┘
+     │
+     ▼
+┌──────────┐
+│  Funded  │  ← brand deposits USDC into the escrow contract
+└────┬─────┘
+     │
+     ▼
+┌────────────────────┐
+│ Delivery Attested   │  ← creator's deliverable is detected and attested on-chain
+└────┬────────────────┘
+     │
+     ▼
+┌────────────────┐
+│ Dispute Window  │  ← fixed window during which either party can raise a dispute
+└────┬───────┬────┘
+     │       │
+     ▼       ▼
+┌──────────┐ ┌───────────┐
+│ Released │ │ Disputed  │  ← resolved by mutual agreement or a designated arbiter
+└──────────┘ └─────┬─────┘
+                    │
+                    ▼
+              ┌───────────┐
+              │ Refunded  │  (or split, per resolution)
+              └───────────┘
+```
+
+A backend detecting a published deliverable is an oracle assertion, not proof the agreement was honored — the dispute window exists so automation (funds release permissionlessly once it passes) doesn't require trusting that assertion blindly.
+
 ## Security Features
 
 1. **Signed Overlay URLs**: Each OBS browser source URL is signed per creator so alert streams can't be spoofed or replayed by third parties
 2. **Atomic Fee Splits**: Fee split and balance credit happen in a single on-chain transaction — no partial payouts
-3. **Authorization Checks**: All withdrawal and payout-configuration operations require proper Stellar account authorization
-4. **Replay Protection**: Tip events carry a nonce so a duplicate anchor callback can't double-credit a creator
-5. **Rate Limiting**: Public tip endpoint is rate-limited per viewer session to reduce spam and abuse
+3. **Escrowed Sponsorship Funds with a Dispute Window**: Brand funds never go directly to a creator; they release only after delivery is attested and a dispute window passes, with disputes resolved by mutual agreement or a designated arbiter
+4. **Authorization Checks**: All withdrawal, payout-configuration, and deal-attestation operations require proper Stellar account authorization
+5. **Replay Protection**: Tip and escrow events carry a nonce so a duplicate anchor or attestation callback can't double-credit a creator
+6. **Rate Limiting**: Public tip and deal-proposal endpoints are rate-limited per session to reduce spam and abuse
 
 ## Quick Start
 
@@ -194,17 +244,17 @@ Data-fetching pages (dashboard, public tip page) expect a running `backend` — 
 
 CreatorPesa uses environment variables for configuration across environments (local, testnet, mainnet).
 
-| Variable                           | Description                                               |
-| ---------------------------------- | --------------------------------------------------------- |
-| `NEXT_PUBLIC_API_URL`              | Backend API base URL                                      |
-| `NEXT_PUBLIC_WS_URL`               | WebSocket URL for the realtime tip feed                   |
-| `NEXT_PUBLIC_NETWORK`              | `testnet` or `mainnet`                                    |
-| `NEXT_PUBLIC_HORIZON_URL`          | Stellar Horizon endpoint                                  |
-| `NEXT_PUBLIC_SOROBAN_RPC`          | Soroban RPC endpoint                                      |
-| `NEXT_PUBLIC_ESCROW_CONTRACT_ID`   | Deployed Escrow contract address (from `contracts`)       |
-| `NEXT_PUBLIC_SPLITTER_CONTRACT_ID` | Deployed Payment Splitter contract address                |
-| `NEXT_PUBLIC_REGISTRY_CONTRACT_ID` | Deployed Creator Registry contract address                |
-| `NEXT_PUBLIC_SESSION_COOKIE_NAME`  | Name of the session cookie the backend issues after OAuth |
+| Variable                           | Description                                                             |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`              | Backend API base URL                                                    |
+| `NEXT_PUBLIC_WS_URL`               | WebSocket URL for the realtime feed (tips, escrow/deal status, payouts) |
+| `NEXT_PUBLIC_NETWORK`              | `testnet` or `mainnet`                                                  |
+| `NEXT_PUBLIC_HORIZON_URL`          | Stellar Horizon endpoint                                                |
+| `NEXT_PUBLIC_SOROBAN_RPC`          | Soroban RPC endpoint                                                    |
+| `NEXT_PUBLIC_ESCROW_CONTRACT_ID`   | Deployed Escrow contract address (from `contracts`)                     |
+| `NEXT_PUBLIC_SPLITTER_CONTRACT_ID` | Deployed Payment Splitter contract address                              |
+| `NEXT_PUBLIC_REGISTRY_CONTRACT_ID` | Deployed Creator Registry contract address                              |
+| `NEXT_PUBLIC_SESSION_COOKIE_NAME`  | Name of the session cookie the backend issues after OAuth               |
 
 Validated at import time via a `zod` schema (`src/lib/env.ts`) — a missing variable fails fast at build/server-start instead of surfacing as an obscure runtime error later.
 
@@ -221,13 +271,13 @@ npm run build
 
 ## MVP Scope
 
-The initial testnet MVP focuses on a single end-to-end flow:
+CreatorPesa has three income streams — tips, sponsorship escrow, and membership subscriptions — but the initial testnet MVP proves out just the first, end-to-end, before extending the same settlement/splitter infrastructure to the other two:
 
 1. A viewer tips a creator via M-Pesa on the public tip page
 2. The payment settles as USDC, the fee splits instantly between creator and platform
 3. The creator's OBS overlay fires an alert and the dashboard reflects the new tip
 
-Everything else (Airtel/MoMo on-ramps, full video analytics, passkey login) ships in subsequent milestones.
+Sponsorship escrow, membership billing, Airtel/MoMo on-ramps, full video analytics, and passkey login ship in subsequent milestones — see [Roadmap](#roadmap).
 
 ## Roadmap
 
@@ -244,7 +294,7 @@ Everything else (Airtel/MoMo on-ramps, full video analytics, passkey login) ship
 ### Cross-repo (blocked on `backend` / `contracts`)
 
 - [ ] `backend` service implementing the REST/WebSocket API this frontend already calls
-- [ ] `tip_router` / Payment Splitter / Creator Registry Soroban contracts
+- [ ] `tip_router` / Escrow / Payment Splitter / Creator Registry Soroban contracts
 - [ ] Real anchor integrations (M-Pesa, Airtel Money, MTN MoMo)
 - [ ] Passkey / social login issuing the session this frontend reads
 - [ ] Mainnet launch
