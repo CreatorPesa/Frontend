@@ -2,11 +2,19 @@
 
 [![Frontend CI](https://github.com/CreatorPesa/Frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/CreatorPesa/Frontend/actions/workflows/ci.yml)
 
-Next.js and TypeScript client for the CreatorPesa network — a creator dashboard with video analytics, public tipping surfaces built for local African payment rails, and live OBS browser-source overlay alerts driven by instant on-chain settlement.
+Next.js and TypeScript client for the CreatorPesa network — direct income rails (tips, subscriptions, sponsorship escrow) for African video creators, replacing their dependence on AdSense as the only payout path.
 
 ## Overview
 
-CreatorPesa lets African creators get tipped the way YouTubers and Twitch streamers do in the US, without asking viewers to own crypto or hold a foreign bank card. A viewer pays with M-Pesa, Airtel Money, or MTN MoMo; the payment is converted to USDC and settled on Stellar in seconds; the creator's OBS overlay fires an on-stream alert the moment the tip lands, and the dashboard's analytics update in real time.
+### Problem & Goal
+
+For African video creators, Google AdSense is often the _only_ income path — and it is a broken one: address/PIN verification can take months, the $100 payout threshold locks up earnings, USD wires are rejected or heavily fee'd by local banks, and payouts arrive weeks after the work. The revenue exists; the rails to receive it don't.
+
+**CreatorPesa's goal is to replace creators' dependence on AdSense as their payment rail.** AdSense's internal payout pipeline is a closed Google system that no third party can intercept, so CreatorPesa does not process ad revenue — instead it builds the direct income rails AdSense can't provide: fans tip and subscribe, and sponsors pay through escrow, all in local payment methods (mobile money, bank transfer), settling instantly as USDC on Stellar with no thresholds, no PIN letters, and no weeks-long waits. The endgame is that AdSense becomes one income stream among several rather than the gatekeeper of a creator's livelihood.
+
+### How It Works
+
+CreatorPesa lets African creators get tipped the way YouTubers and Twitch streamers do in the US, without asking viewers to own crypto or hold a foreign bank card. A viewer pays with M-Pesa, Airtel Money, or MTN MoMo; the payment is converted to USDC and settled on Stellar in seconds; the creator's OBS overlay fires an on-stream alert the moment the tip lands, and the dashboard's analytics update in real time. Sponsors fund deals through an escrow contract that only releases payment once a deliverable is attested and a dispute window passes, and fans can subscribe to a creator's membership tiers for recurring support.
 
 Stellar is the settlement backbone: sub-cent fees mean a $0.50 tip is still worth sending, built-in anchors handle the fiat conversion so viewers never touch a wallet directly, and a lightweight Soroban contract records each tip, splits the platform fee, and emits the event that drives the overlay and the dashboard.
 
@@ -18,6 +26,8 @@ This repository is the frontend client — the dashboard, the public tip pages, 
 
 - **Creator Dashboard**: Video analytics (views, watch time, top clips) alongside tipping analytics (top supporters, tip volume, payout history)
 - **Public Tipping Page**: A shareable per-creator page where viewers tip via local mobile money, no crypto knowledge required
+- **Sponsorship Escrow**: Creators propose deal terms with a brand; funds sit in escrow until the deliverable is attested and the dispute window passes — no payment before the work is honored, no disappearing after it's funded
+- **Membership Tiers**: Recurring subscription tiers fans can join for ongoing support, beyond one-off tips
 - **Live OBS Overlay**: A browser-source URL, unique per creator, that renders on-stream alerts the instant a tip settles
 - **Instant On-Chain Settlement**: Tips settle on Stellar in seconds rather than the days typical of local payment rails
 - **Local Payment Rails**: M-Pesa, Airtel Money, and MTN MoMo on-ramps via Stellar anchors — viewers pay in local currency
