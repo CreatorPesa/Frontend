@@ -19,6 +19,7 @@ export default defineConfig({
       NEXT_PUBLIC_NETWORK: 'testnet',
       NEXT_PUBLIC_HORIZON_URL: 'https://horizon-testnet.stellar.org',
       NEXT_PUBLIC_SOROBAN_RPC: 'https://soroban-testnet.stellar.org',
+      OVERLAY_SIGNING_SECRET: 'vitest-only-secret-not-for-prod-use',
     },
   },
   resolve: {
