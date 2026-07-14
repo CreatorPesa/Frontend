@@ -27,4 +27,21 @@ describe('apiFetch', () => {
       status: 400,
     });
   });
+
+  it('aborts the underlying fetch once the default timeout elapses', async () => {
+    vi.useFakeTimers();
+    global.fetch = vi.fn((_url, init?: RequestInit) => {
+      return new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () =>
+          reject(new DOMException('Aborted', 'AbortError')),
+        );
+      });
+    });
+
+    const pending = apiFetch('/slow');
+    const assertion = expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+    await vi.advanceTimersByTimeAsync(15_000);
+    await assertion;
+    vi.useRealTimers();
+  });
 });
