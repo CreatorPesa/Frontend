@@ -8,11 +8,23 @@ interface DataPoint {
   views: number;
 }
 
-export function AnalyticsChart({ data }: { data: DataPoint[] }) {
+export function AnalyticsChart({
+  data,
+  estimated = false,
+}: {
+  data: DataPoint[];
+  /** True when `data` is a smoothed placeholder rather than real per-day analytics. */
+  estimated?: boolean;
+}) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Views (last 14 days)</CardTitle>
+        {estimated && (
+          <span className="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-medium text-ink-500">
+            Estimated
+          </span>
+        )}
       </CardHeader>
       <CardBody className="h-64">
         <ResponsiveContainer width="100%" height="100%">
