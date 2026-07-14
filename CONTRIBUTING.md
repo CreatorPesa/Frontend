@@ -33,6 +33,7 @@ A pre-commit hook already runs lint-staged (ESLint + Prettier on staged files) a
 - [ ] User-facing error messages use `role="alert"` so they're announced to screen readers
 - [ ] New data-fetching routes have a `loading.tsx` and `error.tsx` in the same route segment (or inherit one from a parent segment)
 - [ ] No new dependency without checking `npm audit` for what it pulls in
+- [ ] Any new public/unauthenticated route that exposes per-creator data is either genuinely public or gated the way `/overlay/[creatorId]` is (signed token verified in `middleware.ts`, `src/lib/auth/overlayToken.ts`) — don't add another raw-ID-in-the-URL route
 
 ## Conventions
 
