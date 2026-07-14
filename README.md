@@ -270,6 +270,10 @@ npm run build
 
 52 tests cover form validation (via the `zod` schemas in `src/lib/validation/`), success/failure paths for every API-backed form, the realtime tip-feed merge/dedup logic, the overlay-URL signing/verification, and the `apiFetch` timeout/error paths. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full pre-PR checklist and testing conventions.
 
+## Known Issues
+
+- **Next.js advisories**: `npm audit` currently flags `next@14.2.35` for several advisories (HTTP request smuggling in rewrites, SSRF via WebSocket upgrades, cache-poisoning/DoS variants). `14.2.35` is the latest `14.2.x` patch — there is no non-breaking fix available; resolving these requires the major bump to Next 15 (and React 19), which touches `cookies()`/`headers()` call sites across every server component in `src/app`. That migration is deliberately not bundled into this cleanup pass; it needs its own PR and testing pass rather than riding along with unrelated fixes.
+
 ## MVP Scope
 
 CreatorPesa has three income streams — tips, sponsorship escrow, and membership subscriptions — but the initial testnet MVP proves out just the first, end-to-end, before extending the same settlement/splitter infrastructure to the other two:
