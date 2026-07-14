@@ -27,25 +27,35 @@ interface RequestOptions {
  * bearer token, so `credentials: 'include'` is required on every call.
  */
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const res = await fetch(`${env.NEXT_PUBLIC_API_URL}${path}`, {
-    method: options.method ?? 'GET',
-    credentials: 'include',
-    signal: options.signal,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.cookie ? { cookie: options.cookie } : {}),
-    },
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
+  const timeoutController = new AbortController();
+  const timeoutId = setTimeout(() => timeoutController.abort(), DEFAULT_TIMEOUT_MS);
+  const onCallerAbort = () => timeoutController.abort();
+  options.signal?.addEventListener('abort', onCallerAbort);
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => undefined);
-    throw new ApiError(`Request to ${path} failed with ${res.status}`, res.status, body);
+  try {
+    const res = await fetch(`${env.NEXT_PUBLIC_API_URL}${path}`, {
+      method: options.method ?? 'GET',
+      credentials: 'include',
+      signal: timeoutController.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.cookie ? { cookie: options.cookie } : {}),
+      },
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => undefined);
+      throw new ApiError(`Request to ${path} failed with ${res.status}`, res.status, body);
+    }
+
+    if (res.status === 204) {
+      return undefined as T;
+    }
+
+    return (await res.json()) as T;
+  } finally {
+    clearTimeout(timeoutId);
+    options.signal?.removeEventListener('abort', onCallerAbort);
   }
-
-  if (res.status === 204) {
-    return undefined as T;
-  }
-
-  return (await res.json()) as T;
 }
