@@ -255,8 +255,9 @@ CreatorPesa uses environment variables for configuration across environments (lo
 | `NEXT_PUBLIC_SPLITTER_CONTRACT_ID` | Deployed Payment Splitter contract address                              |
 | `NEXT_PUBLIC_REGISTRY_CONTRACT_ID` | Deployed Creator Registry contract address                              |
 | `NEXT_PUBLIC_SESSION_COOKIE_NAME`  | Name of the session cookie the backend issues after OAuth               |
+| `OVERLAY_SIGNING_SECRET`           | Server-only secret used to HMAC-sign each creator's OBS overlay URL     |
 
-Validated at import time via a `zod` schema (`src/lib/env.ts`) — a missing variable fails fast at build/server-start instead of surfacing as an obscure runtime error later.
+Validated at import time via `zod` schemas (`src/lib/env.ts` for `NEXT_PUBLIC_*`, `src/lib/env.server.ts` for server-only secrets) — a missing variable fails fast at build/server-start instead of surfacing as an obscure runtime error later.
 
 ## Testing
 
