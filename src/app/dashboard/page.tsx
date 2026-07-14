@@ -25,7 +25,7 @@ export default async function DashboardOverviewPage() {
       </div>
 
       <EarningsSummaryCard earnings={earnings} />
-      <AnalyticsChart data={viewSeries} />
+      <AnalyticsChart data={viewSeries} estimated />
       <LiveRecentTips creatorId={creator.id} initialTips={tips} />
     </div>
   );
