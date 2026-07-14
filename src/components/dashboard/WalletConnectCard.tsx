@@ -16,8 +16,10 @@ export function WalletConnectCard() {
       </CardHeader>
       <CardBody className="flex flex-col gap-3">
         <p className="text-sm text-ink-500">
-          Connect Freighter to sign payout and revenue-split transactions. CreatorPesa never sees
-          your private key — only the connect and sign prompts.
+          Connect Freighter to link a Stellar wallet to your account. CreatorPesa never sees your
+          private key — only the connect and sign prompts. Signing payout and revenue-split
+          transactions with this wallet is not wired up yet; that depends on the `backend` and
+          `contracts` repos landing first.
         </p>
 
         {address ? (
