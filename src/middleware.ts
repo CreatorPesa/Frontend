@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyOverlayToken } from '@/lib/auth/overlayToken';
+import { serverEnv } from '@/lib/env.server';
 
 const SESSION_COOKIE_NAME = process.env.NEXT_PUBLIC_SESSION_COOKIE_NAME ?? 'cp_session';
 const HANDLE_PATTERN = /^\/@([a-zA-Z0-9_-]+)$/;
+const OVERLAY_PATTERN = /^\/overlay\/([a-zA-Z0-9_-]+)$/;
 
 /**
  * Public tip pages are shared as creatorpesa.app/@handle, but Next.js
@@ -9,7 +12,7 @@ const HANDLE_PATTERN = /^\/@([a-zA-Z0-9_-]+)$/;
  * the real route lives at /creator/[handle] and this rewrite maps the
  * public URL onto it.
  */
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const handleMatch = pathname.match(HANDLE_PATTERN);
@@ -17,6 +20,21 @@ export function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = `/creator/${handleMatch[1]}`;
     return NextResponse.rewrite(url);
+  }
+
+  const overlayMatch = pathname.match(OVERLAY_PATTERN);
+  const creatorId = overlayMatch?.[1];
+  if (creatorId) {
+    const token = request.nextUrl.searchParams.get('token');
+    const valid =
+      token !== null &&
+      (await verifyOverlayToken(creatorId, token, serverEnv.OVERLAY_SIGNING_SECRET));
+    if (!valid) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/overlay/invalid';
+      url.search = '';
+      return NextResponse.rewrite(url);
+    }
   }
 
   if (pathname.startsWith('/dashboard')) {
