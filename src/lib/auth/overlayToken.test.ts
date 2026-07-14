@@ -8,4 +8,9 @@ describe('signOverlayToken / verifyOverlayToken', () => {
     const token = await signOverlayToken('creator_123', SECRET);
     await expect(verifyOverlayToken('creator_123', token, SECRET)).resolves.toBe(true);
   });
+
+  it('rejects the token when replayed against a different creatorId', async () => {
+    const token = await signOverlayToken('creator_123', SECRET);
+    await expect(verifyOverlayToken('creator_456', token, SECRET)).resolves.toBe(false);
+  });
 });
