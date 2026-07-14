@@ -5,10 +5,17 @@ import { WalletConnectCard } from '@/components/dashboard/WalletConnectCard';
 import { MembershipTierManager } from '@/components/dashboard/MembershipTierManager';
 import { getMyCreatorProfile } from '@/lib/api/creators';
 import { truncateAddress } from '@/lib/stellar/format';
+import { buildSignedOverlayUrl } from '@/lib/auth/overlayUrl';
+import { serverEnv } from '@/lib/env.server';
 
 export default async function SettingsPage() {
   const cookieHeader = cookies().toString();
   const creator = await getMyCreatorProfile(cookieHeader);
+  const overlayUrl = await buildSignedOverlayUrl(
+    'https://creatorpesa.app',
+    creator.id,
+    serverEnv.OVERLAY_SIGNING_SECRET,
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,8 +55,8 @@ export default async function SettingsPage() {
           <p className="text-ink-500">
             Add this URL as a Browser Source in OBS to show live tip alerts on stream.
           </p>
-          <code className="rounded-md bg-ink-50 p-2 text-xs text-ink-800">
-            https://creatorpesa.app/overlay/{creator.id}
+          <code className="break-all rounded-md bg-ink-50 p-2 text-xs text-ink-800">
+            {overlayUrl}
           </code>
         </CardBody>
       </Card>
