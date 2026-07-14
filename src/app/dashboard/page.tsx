@@ -4,6 +4,7 @@ import { AnalyticsChart } from '@/components/dashboard/AnalyticsChart';
 import { LiveRecentTips } from '@/components/dashboard/LiveRecentTips';
 import { getCreatorAnalytics, getCreatorEarnings, getMyCreatorProfile } from '@/lib/api/creators';
 import { getRecentTips } from '@/lib/api/tips';
+import { buildEstimatedViewSeries } from '@/lib/utils/analytics';
 
 export default async function DashboardOverviewPage() {
   const cookieHeader = cookies().toString();
@@ -14,11 +15,7 @@ export default async function DashboardOverviewPage() {
     getRecentTips(creator.id, cookieHeader),
   ]);
 
-  // Placeholder series until the analytics endpoint exposes a daily breakdown.
-  const viewSeries = Array.from({ length: 14 }, (_, i) => ({
-    date: `Day ${i + 1}`,
-    views: Math.round((analytics.totalViews / 14) * (0.7 + Math.random() * 0.6)),
-  }));
+  const viewSeries = buildEstimatedViewSeries(analytics.totalViews);
 
   return (
     <div className="flex flex-col gap-6">
