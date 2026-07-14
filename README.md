@@ -268,7 +268,7 @@ npm run test
 npm run build
 ```
 
-39 tests cover form validation (via the `zod` schemas in `src/lib/validation/`), success/failure paths for every API-backed form, and the realtime tip-feed merge/dedup logic. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full pre-PR checklist and testing conventions.
+52 tests cover form validation (via the `zod` schemas in `src/lib/validation/`), success/failure paths for every API-backed form, the realtime tip-feed merge/dedup logic, the overlay-URL signing/verification, and the `apiFetch` timeout/error paths. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full pre-PR checklist and testing conventions.
 
 ## MVP Scope
 
