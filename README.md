@@ -290,7 +290,7 @@ Sponsorship escrow, membership billing, Airtel/MoMo on-ramps, full video analyti
 - [x] Wallet connect (Freighter) flow
 - [x] Sponsorship deal proposal flow
 - [x] Membership tier management
-- [ ] Real video analytics (currently a placeholder series pending the analytics endpoint)
+- [ ] Real video analytics (currently a deterministic, clearly-labeled "Estimated" placeholder series — see `src/lib/utils/analytics.ts` — pending the analytics endpoint exposing a real daily breakdown)
 
 ### Cross-repo (blocked on `backend` / `contracts`)
 
