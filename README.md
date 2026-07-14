@@ -208,7 +208,7 @@ A backend detecting a published deliverable is an oracle assertion, not proof th
 
 ## Security Features
 
-1. **Signed Overlay URLs**: Each OBS browser source URL is HMAC-signed per creator (`src/lib/auth/overlayToken.ts`, verified in `middleware.ts`) so alert streams can't be spoofed or scraped from a guessed creatorId
+1. **Signed, Expiring Overlay URLs**: Each OBS browser source URL is HMAC-signed per creator with a ~180-day expiry baked into the token itself (`src/lib/auth/overlayToken.ts`, verified in `middleware.ts`), so alert streams can't be spoofed or scraped from a guessed creatorId, and a leaked link doesn't stay valid forever
 2. **Atomic Fee Splits**: Fee split and balance credit happen in a single on-chain transaction — no partial payouts
 3. **Escrowed Sponsorship Funds with a Dispute Window**: Brand funds never go directly to a creator; they release only after delivery is attested and a dispute window passes, with disputes resolved by mutual agreement or a designated arbiter
 4. **Authorization Checks**: All withdrawal, payout-configuration, and deal-attestation operations require proper Stellar account authorization
