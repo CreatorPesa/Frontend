@@ -31,7 +31,7 @@ This repository is the frontend client — the dashboard, the public tip pages, 
 - **Live OBS Overlay**: A browser-source URL, unique per creator, that renders on-stream alerts the instant a tip settles
 - **Instant On-Chain Settlement**: Tips settle on Stellar in seconds rather than the days typical of local payment rails
 - **Local Payment Rails**: M-Pesa, Airtel Money, and MTN MoMo on-ramps via Stellar anchors — viewers pay in local currency
-- **Passkey / Social Auth**: Creators and viewers log in with email or social auth; a Stellar wallet is generated silently behind the scenes
+- **Passkey / Social Auth** _(target design, not yet built — see [Roadmap](#roadmap))_: creators and viewers log in with email or social auth; a Stellar wallet is generated silently behind the scenes. What's actually implemented in this repo today is a Google OAuth redirect (`src/app/sign-in`) plus an explicit Freighter wallet-connect flow (`src/lib/stellar/freighter.ts`) — passkeys and silent custodial wallet generation depend on the `backend` repo's key management and aren't in this frontend yet
 - **Token-Gated Overlay URLs**: Each OBS browser source is signed per creator so alert streams can't be spoofed or scraped
 
 ## Architecture
