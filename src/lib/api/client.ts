@@ -1,5 +1,7 @@
 import { env } from '@/lib/env';
 
+const DEFAULT_TIMEOUT_MS = 15000;
+
 export class ApiError extends Error {
   constructor(
     message: string,
