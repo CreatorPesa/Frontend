@@ -40,5 +40,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/@:handle*', '/dashboard/:path*'],
+  matcher: ['/@:handle*', '/dashboard/:path*', '/overlay/:path*'],
 };
