@@ -37,7 +37,8 @@ A pre-commit hook already runs lint-staged (ESLint + Prettier on staged files) a
 ## Conventions
 
 - **Validation**: form validation lives in `src/lib/validation/*.ts` as `zod` schemas, parsed with `.safeParse()` in the component's submit handler — not scattered `if` statements.
-- **API calls**: every backend call goes through `src/lib/api/*.ts`, which wraps `apiFetch` (`src/lib/api/client.ts`). Don't call `fetch` directly from a component.
+- **API calls**: every backend call goes through `src/lib/api/*.ts`, which wraps `apiFetch` (`src/lib/api/client.ts`). Don't call `fetch` directly from a component. `apiFetch` aborts after a 15s default timeout, composed with any caller-supplied `AbortSignal` — you don't need to add your own timeout.
+- **Server-only secrets**: `NEXT_PUBLIC_*` vars in `src/lib/env.ts` are bundled into the client — never put a secret there. Server-only values (e.g. `OVERLAY_SIGNING_SECRET`) go in `src/lib/env.server.ts` instead, which is only safe to import from server components, route handlers, or `middleware.ts`.
 - **Server vs. client components**: default to server components for data fetching; mark a component `'use client'` only once it needs state, effects, or browser APIs. Never pass a function prop from a server component into a client component — lift the state into a client wrapper instead (see `LiveRecentTips.tsx` or `SponsorshipsList.tsx` for the pattern).
 - **Error handling**: distinguish "the user isn't authenticated" from "the backend is down" — see the comment in `src/lib/auth/session.ts`. Don't silently swallow errors that should surface as a retryable error state.
 - **Comments**: only where the _why_ isn't obvious from the code (a workaround, a non-obvious constraint). Don't restate what a well-named function already says.
